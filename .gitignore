@@ -1,2 +1,4 @@
+Everything.agda
+*.agda~
 *.agdai
 MAlonzo/**
