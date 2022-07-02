@@ -3,12 +3,12 @@ module STLC.Eval where
 open import Codata.Sized.Delay using (Delay)
 open import Codata.Sized.Delay.Effectful
 open import Data.Bool using (Bool)
-open import Data.Bwd using (Bwd; []; _-,_)
+open import Data.Bwd using (Bwd; []; _-,_; _∈_; here; there)
 open import Data.Nat using (ℕ; suc)
--- open import Data.Scoped
 open import Data.Unit using (⊤; tt)
 open import Effect.Monad using (RawMonad)
 open import Level using (0ℓ)
+open import Relation.Binary.PropositionalEquality using (refl)
 open import Size using (Size)
 
 open import STLC.TypedSyntax
@@ -25,7 +25,7 @@ data All (P : A → Set) : Bwd A → Set where
   [] : All P []
   _-,_ : All P as → P a → All P (as -, a)
 
-Env : Ctx → Set
+Env : Scoped _
 
 data ⟦_⟧ : Ty → Set where
   ttᵥ : ⟦ unit ⟧
@@ -35,7 +35,7 @@ data ⟦_⟧ : Ty → Set where
 Env = All ⟦_⟧
 
 lookup : Env Γ → t ∈ Γ → ⟦ t ⟧
-lookup (_ -, p) here = p
+lookup (_ -, p) (here refl) = p
 lookup (η -, _) (there x) = lookup η x
 
 module _ {i : Size} where
