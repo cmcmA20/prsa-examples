@@ -1,10 +1,11 @@
 module STLC.Eval where
 
-open import Codata.Sized.Delay using (Delay; later)
+open import Codata.Sized.Delay using (Delay)
 open import Codata.Sized.Delay.Effectful
 open import Data.Bool using (Bool)
-open import Data.List using (List; []; _∷_)
+open import Data.Bwd using (Bwd; []; _-,_)
 open import Data.Nat using (ℕ; suc)
+-- open import Data.Scoped
 open import Data.Unit using (⊤; tt)
 open import Effect.Monad using (RawMonad)
 open import Level using (0ℓ)
@@ -16,35 +17,32 @@ private
   variable
     A : Set
     a : A
-    as : List A
+    as : Bwd A
     Γ : Ctx
     t u : Ty
 
-data All (P : A → Set) : List A → Set where
+data All (P : A → Set) : Bwd A → Set where
   [] : All P []
-  _∷_ : P a → All P as → All P (a ∷ as)
-
-⟦_⟧ : Ty → Set
+  _-,_ : All P as → P a → All P (as -, a)
 
 Env : Ctx → Set
+
+data ⟦_⟧ : Ty → Set where
+  ttᵥ : ⟦ unit ⟧
+  closure : Exp u (Γ -, t) → Env Γ → ⟦ t ⟶ u ⟧
+  ⟦_⟧ᵥ : ℕ → ⟦ nat ⟧
+
 Env = All ⟦_⟧
 
-data Closure (t u : Ty) : Set where
-  closure : Exp u (t ∷ Γ) → Env Γ → Closure t u
-
-⟦ unit ⟧ = ⊤
-⟦ t ⟶ u ⟧ = Closure t u
-⟦ nat ⟧ = ℕ
-
 lookup : Env Γ → t ∈ Γ → ⟦ t ⟧
-lookup (p ∷ _) here = p
-lookup (_ ∷ η) (there x) = lookup η x
+lookup (_ -, p) here = p
+lookup (η -, _) (there x) = lookup η x
 
 module _ {i : Size} where
 
   -- Reader over Delay
   M : Ctx → Set → Set
-  M Γ x = Env Γ → Delay x i
+  M Γ A = Env Γ → Delay A i
 
   open RawMonad (Sequential.monad {i} {0ℓ})
 
@@ -55,17 +53,17 @@ module _ {i : Size} where
   eval-nat-elim 0 base _ η = eval base η
   eval-nat-elim (suc n) base ind η = eval-nat-elim n (app ind base) ind η
 
-  eval tt η = return tt
-  eval zero η = return 0
+  eval tt η = return ttᵥ
+  eval zero η = return ⟦ 0 ⟧ᵥ
   eval (suc e) η = do
-    n ← eval e η
-    return (suc n)
+    ⟦ n ⟧ᵥ ← eval e η
+    return ⟦ suc n ⟧ᵥ
   eval (nat-elim e base ind) η = do
-    n ← eval e η
+    ⟦ n ⟧ᵥ ← eval e η
     eval-nat-elim n base ind η
   eval (var x) η = return (lookup η x)
   eval (fun e) η = return (closure e η)
   eval (app f e) η = do
     closure e′ η′ ← eval f η
     v ← eval e η
-    eval e′ (v ∷ η′)
+    eval e′ (η′ -, v)

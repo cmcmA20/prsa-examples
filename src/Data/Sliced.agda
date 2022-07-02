@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --no-sized-types --no-guardedness --no-subtyping #-}
 open import Categories.Category using (Category; _[_,_])
 
 module Data.Sliced
@@ -5,29 +6,32 @@ module Data.Sliced
   (C : Category o ℓ e)
   where
 
-open import Axiom.Extensionality.Propositional using (Extensionality)
 open import Categories.Functor using (Functor)
+open import Categories.Category.Instance.Sets
 open Category using (Obj; _∘_) renaming (id to ide)
 open import Function.Base using (id) renaming (_∘_ to _∘ᶠ_)
 open import Level using (Level; _⊔_; suc; Lift; lift; lower; 0ℓ)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
 open import Relation.Unary using (Pred; _∈_; IUniversal; _⇒_)
 
--- TODO finish this
 Preds : ∀ o → Set o → Category (suc o) o o
 Preds o A = record
   { Obj = Pred A o
   ; _⇒_ = λ P Q → ∀[ P ⇒ Q ]
-  ; _≈_ = λ {P Q} f g → (x : A) → (y : P x) → f y ≡ g y -- is it true?
+  ; _≈_ = λ {P Q} f g → (x : A) → (y : P x) → f y ≡ g y
   ; id = id
   ; _∘_ = λ α β → α ∘ᶠ β
-  ; assoc = {!!}
-  ; sym-assoc = {!!}
-  ; identityˡ = {!!}
-  ; identityʳ = {!!}
-  ; identity² = {!!}
-  ; equiv = {!!}
-  ; ∘-resp-≈ = {!!}
+  ; assoc = λ _ _ → refl
+  ; sym-assoc = λ _ _ → refl
+  ; identityˡ = λ _ _ → refl
+  ; identityʳ = λ _ _ → refl
+  ; identity² = λ _ _ → refl
+  ; equiv = record
+    { refl = λ _ _ → refl
+    ; sym = λ {f} {g} α a x → sym (α a x)
+    ; trans = λ {P} {Q} {R} α β a x → trans (α a x) (β a x)
+    }
+  ; ∘-resp-≈ = λ {_} {_} {_} {f} {_} {_} {i} α β a x → trans (cong f (β a x)) (α a (i x))
   }
 
 CPred : (ℓ₁ : Level) → Set (o ⊔ suc ℓ₁)
@@ -45,19 +49,14 @@ record _⇑_ {ℓ₁} (T : CPred ℓ₁) (domain : C .Obj) : Set (o ⊔ ℓ ⊔ 
 map : ∀ {ℓ₁} → {P Q : CPred ℓ₁} → ∀[ P ⇒ Q ] → ∀[ P ⇑_ ⇒ Q ⇑_ ]
 map f (s ↑ θ) = f s ↑ θ
 
-map-id : ∀ {ℓ₁} → {P : CPred ℓ₁} → {d : C .Obj} → (t : P ⇑ d) → map id t ≡ t
-map-id (thing ↑ thinning) = refl
-
--- TODO finish this
-module _ {ℓ₁ ℓ₂} {funExt : Extensionality ℓ₁ ℓ₂} where
-  SlicedFunctor : Functor (Preds o (C .Obj)) (Preds (o ⊔ ℓ) (Lift ℓ (C .Obj)))
-  SlicedFunctor = record
-    { F₀ = λ P d → P ⇑ lower d
-    ; F₁ = λ f x → map f x
-    ; identity = λ _ → map-id
-    ; homomorphism = {!!}
-    ; F-resp-≈ = {!!}
-    }
+SlicedFunctor : Functor (Preds o (C .Obj)) (Preds (o ⊔ ℓ) (Lift ℓ (C .Obj)))
+SlicedFunctor = record
+  { F₀ = λ P d → P ⇑ lower d
+  ; F₁ = λ f x → map f x
+  ; identity = λ _ _ → refl
+  ; homomorphism = λ _ _ → refl
+  ; F-resp-≈ = λ {P} {Q} {α} {β} eq d (t ↑ θ) → cong (_↑ θ) (eq _ _)
+  }
 
 unit : ∀ {ℓ₁} → {P : CPred ℓ₁} → ∀[ P ⇒ P ⇑_ ]
 unit t = t ↑ C .ide
