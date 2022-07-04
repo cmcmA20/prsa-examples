@@ -21,13 +21,16 @@ open import Relation.Unary using (Pred)
 private variable
   ℓ₁ : Level
   k : 𝐾
-  iz iz′ jz jz′ kz ijz ijz′ : Bwd 𝐾
+  iz iz′ jz jz′ kz kz′ ijz ijz′ : Bwd 𝐾
 
 infixr 19 _⊑_
-data _⊑_ : Bwd 𝐾 → Bwd 𝐾 → Set 0ℓ where
+data _⊑_ : Bwd 𝐾 → Bwd 𝐾 → Set where
   _o′ : iz ⊑ jz →  iz        ⊑ (jz -, k)
   _os : iz ⊑ jz → (iz -, k) ⊑ (jz -, k)
   oz :               []        ⊑  []
+
+_⟵_ : 𝐾 → Bwd 𝐾 → Set
+k ⟵ kz = ([] -, k) ⊑ kz
 
 _⧺⊑_ : iz ⊑ jz → iz′ ⊑ jz′ → (iz ⧺ iz′) ⊑ (jz ⧺ jz′)
 θ ⧺⊑ (ϕ o′) = (θ ⧺⊑ ϕ) o′
@@ -112,15 +115,10 @@ open import Data.Sliced SubstructureCat renaming
   ( CPred to Substructured
   ; _⇑_ to _⇑′_
   ; _↑_ to _↑′_
-  ; map⇑ to map⇑′
-  ; unit⇑ to unit⇑′
-  ; mult⇑ to mult⇑′
-  ; thin⇑ to thin⇑′
-  ) hiding (SlicedFunctor) public
+  ) hiding (map⇑; unit⇑; mult⇑; thin⇑; SlicedFunctor) public
 open _⇑′_ public
 
 module _ where
-
   private variable
     θ : iz ⊑ ijz
     θ′ : iz′ ⊑ ijz′
@@ -128,22 +126,22 @@ module _ where
     ϕ′ : jz′ ⊑ ijz′
     wss s₁ s₂ : Substructure
 
-  data Coverₒ : iz ⊑ ijz → jz ⊑ ijz → Set ℓ where
+  data Coverₒ : iz ⊑ ijz → jz ⊑ ijz → Set where
     _c′s : Coverₒ θ ϕ → Coverₒ (_o′ {k = k} θ) (ϕ os)
     czi : (p : ϕ ≡ oe) → Coverₒ oi ϕ
 
-  data Coverₗ : iz ⊑ ijz → jz ⊑ ijz → Set ℓ where
+  data Coverₗ : iz ⊑ ijz → jz ⊑ ijz → Set where
     _c′s : Coverₗ θ ϕ → Coverₗ (_o′ {k = k} θ) (ϕ os)
     _cs′ : Coverₗ θ ϕ → Coverₗ (_os {k = k} θ) (ϕ o′)
     czz : Coverₗ oz oz
 
-  data Coverᵣ : iz ⊑ ijz → jz ⊑ ijz → Set ℓ where
+  data Coverᵣ : iz ⊑ ijz → jz ⊑ ijz → Set where
     _c′s : Coverᵣ θ ϕ → Coverᵣ (_o′ {k = k} θ) (ϕ os)
     _cs′ : Coverᵣ θ ϕ → Coverᵣ (_os {k = k} θ) (ϕ o′)
     _css : Coverᵣ θ ϕ → Coverᵣ (_os {k = k} θ) (ϕ os)
     czz : Coverᵣ oz oz
 
-  Coverₛ : iz ⊑ ijz → jz ⊑ ijz → Substructured ℓ
+  Coverₛ : iz ⊑ ijz → jz ⊑ ijz → Substructured _
   Coverₛ θ ϕ Ordered = Coverₒ θ ϕ
   Coverₛ θ ϕ Linear = Coverₗ θ ϕ
   Coverₛ θ ϕ Relevant = Coverᵣ θ ϕ
@@ -214,6 +212,32 @@ _∐_ : (θ : iz ⊑ kz) (ϕ : jz ⊑ kz) →
 ... | ! ! ! ! (tl , _↑′_ {support = Relevant} c _ , tr) = ! ! ! ! (tl tsss , c css ↑′ tt , tr tsss)
 oz ∐ oz = ! ! ! ! (tzzz , czi refl ↑′ tt , tzzz)
 
+module _ where
+  private variable
+    θ′ : iz′ ⊑ kz′
+    ϕ′ : jz′ ⊑ kz′
+    wss : Substructure
+
+  subCop : ∀ {θ′ : iz′ ⊑ kz′} {ϕ′ : jz′ ⊑ kz′} → (ψ : kz ⊑ kz′) → Coverₛ θ′ ϕ′ wss →
+              Σ _ λ iz → Σ _ λ jz → Σ (iz ⊑ kz) λ θ → Σ (jz ⊑ kz) λ ϕ → Σ (iz ⊑ iz′) λ ψ₀ → Σ (jz ⊑ jz′) λ ψ₁ → Coverₛ θ ϕ wss
+  subCop {wss = Ordered} (ψ o′) (c c′s) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ , ψ₁ o′ , c′)
+  subCop {wss = Ordered} (ψ o′) (czi refl) = _ , [] , _ , oe , ψ o′ , oe , cie
+  subCop {wss = Linear} (ψ o′) (c c′s) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ , ψ₁ o′ , c′)
+  subCop {wss = Linear} (ψ o′) (c cs′) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ o′ , ψ₁ , c′)
+  subCop {wss = Relevant} (ψ o′) (c c′s) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ , ψ₁ o′ , c′)
+  subCop {wss = Relevant} (ψ o′) (c cs′) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ o′ , ψ₁ , c′)
+  subCop {wss = Relevant} (ψ o′) (c css) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ o′ , ψ₁ o′ , c′)
+  subCop {wss = Unrestricted} (ψ o′) _ = [] , [] , oe , oe , oe , oe , tt -- you choose weak guarantees — you get trivial subcover
+  subCop {wss = Ordered} (ψ os) (c c′s) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ , ψ₁ os , c′ c′s)
+  subCop {wss = Ordered} (ψ os) (czi refl) = _ , [] , _ , oe , ψ os , oe , cie
+  subCop {wss = Linear} (ψ os) (c c′s) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ , ψ₁ os , c′ c′s)
+  subCop {wss = Linear} (ψ os) (c cs′) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ os , ψ₁ , c′ cs′)
+  subCop {wss = Relevant} (ψ os) (c c′s) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ , ψ₁ os , c′ c′s)
+  subCop {wss = Relevant} (ψ os) (c cs′) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ os , ψ₁ , c′ cs′)
+  subCop {wss = Relevant} (ψ os) (c css) = let ! ! ! ! (ψ₀ , ψ₁ , c′) = subCop ψ c in ! ! ! ! (ψ₀ os , ψ₁ os , c′ css)
+  subCop {wss = Unrestricted} (ψ os) c = [] , [] , oe , oe , oe , oe , tt -- same here
+  subCop {θ′ = oz} {ϕ′ = oz} oz c = ! ! ! ! (oz , oz , c)
+
 lrCop : (iz jz : Bwd 𝐾) → Σ (iz ⊑ (iz ⧺ jz)) λ θ → Σ (jz ⊑ (iz ⧺ jz)) λ ϕ → Coverₛ θ ϕ Ordered
 lrCop iz [] = ! ! cie
 lrCop iz (jz -, j) = let ! ! c = lrCop iz jz in ! ! (c c′s)
@@ -225,7 +249,7 @@ _⊣_ : ∀ {iz kz} jz → (ψ : iz ⊑ (kz ⧺ jz)) → Σ _ λ kz′ → Σ _ 
 (jz -, _) ⊣ (ψ os) with jz ⊣ ψ
 ... | ! ! (θ , ϕ , refl , refl) = ! ! (θ , ϕ os , refl , refl)
 
-open import Data.Sliced Δ₊ public renaming (CPred to Scoped)
+open import Data.Sliced Δ₊ using (_⇑_; _↑_; thin⇑) renaming (CPred to Scoped) public
 open _⇑_ public
 
 data Oneₛ : Scoped ℓ where
@@ -244,6 +268,7 @@ _⑊ₛ_ : ∀ jz → T ⇑ (kz ⧺ jz) → (jz ⊢ T) ⇑ kz
 jz ⑊ₛ (t ↑ ψ) with jz ⊣ ψ
 ... | ! ! (θ , ϕ , refl , refl) = (ϕ ⑊ t) ↑ θ
 
+infixl 16 _×ₛ_
 record _×ₛ_ (S T : Scoped ℓ) {wss : Substructure} (ijz : Bwd 𝐾) : Set ℓ where
   constructor pair
   field
@@ -251,12 +276,15 @@ record _×ₛ_ (S T : Scoped ℓ) {wss : Substructure} (ijz : Bwd 𝐾) : Set �
     outr : T ⇑ ijz
     cover : Coverₛ (outl .thinning) (outr .thinning) ⇑′ wss
 
+infixl 16 _×ₒ_
 _×ₒ_ : (S T : Scoped ℓ) → Scoped ℓ
 S ×ₒ T = (S ×ₛ T) {Ordered}
 
+infixl 16 _×ₗ_
 _×ₗ_ : (S T : Scoped ℓ) → Scoped ℓ
 S ×ₗ T = (S ×ₛ T) {Linear}
 
+infixl 16 _×ᵣ_
 _×ᵣ_ : (S T : Scoped ℓ) → Scoped ℓ
 S ×ᵣ T = (S ×ₛ T) {Relevant}
 
@@ -269,8 +297,8 @@ outlₛ (pair s _ _ ↑ ψ) = thin⇑ ψ s
 outrₛ : {wss : Substructure} → {S T : Scoped _} → (S ×ₛ T) {wss} ⇑ kz → T ⇑ kz
 outrₛ (pair _ t _ ↑ ψ) = thin⇑ ψ t
 
-data Var (k : 𝐾) : Scoped ℓ where
-  only : Var k ([] -, k)
+data Vaᵣ (k : 𝐾) : Scoped ℓ where
+  only : Vaᵣ k ([] -, k)
 
-var : ([] -, k) ⊑ kz → Var k ⇑ kz
-var θ = only ↑ θ
+vaᵣ : ([] -, k) ⊑ kz → Vaᵣ k ⇑ kz
+vaᵣ θ = only ↑ θ

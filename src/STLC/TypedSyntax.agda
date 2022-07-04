@@ -9,7 +9,7 @@ data Ty : Set where
   nat : Ty
   _⟶_ : Ty → Ty → Ty
 
-open import Data.Scoped {0ℓ} Ty public hiding (var)
+open import Data.Scoped {0ℓ} Ty public
 
 Ctx : Set
 Ctx = Bwd Ty
