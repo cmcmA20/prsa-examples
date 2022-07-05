@@ -8,7 +8,7 @@ module Data.Scoped
 
 open import Categories.Category using (Category; _[_,_])
 open import Categories.Category.Instance.Sets using (Sets)
-open import Categories.Functor using (Functor)
+open import Categories.Functor using (Endofunctor; Functor)
 open import Data.Bwd using (Bwd; []; _-,_; _⧺_)
 open import Data.Product using (Σ; _×_; _,_)
 open import Data.Substructure using (Ordered; Linear; Substructure; Relevant; SubstructureCat; Unrestricted)
@@ -16,6 +16,7 @@ open import Data.Unit.Polymorphic using (⊤; tt)
 open import Function using (_|>_)
 open Functor using (F₀; F₁)
 open import Relation.Binary.PropositionalEquality using (_≡_; cong; refl)
+-- open import Relation.Ternary.Core
 open import Relation.Unary using (Pred)
 
 private variable
@@ -24,12 +25,12 @@ private variable
   iz iz′ jz jz′ kz kz′ ijz ijz′ : Bwd 𝐾
 
 infixr 19 _⊑_
-data _⊑_ : Bwd 𝐾 → Bwd 𝐾 → Set where
+data _⊑_ : Bwd 𝐾 → Bwd 𝐾 → Set ℓ where
   _o′ : iz ⊑ jz →  iz        ⊑ (jz -, k)
   _os : iz ⊑ jz → (iz -, k) ⊑ (jz -, k)
   oz :               []        ⊑  []
 
-_⟵_ : 𝐾 → Bwd 𝐾 → Set
+_⟵_ : 𝐾 → Bwd 𝐾 → Set ℓ
 k ⟵ kz = ([] -, k) ⊑ kz
 
 _⧺⊑_ : iz ⊑ jz → iz′ ⊑ jz′ → (iz ⧺ iz′) ⊑ (jz ⧺ jz′)
@@ -52,7 +53,7 @@ _⋆_ : iz ⊑ jz → jz ⊑ kz → iz ⊑ kz
 (θ os) ⋆ (ϕ os) = (θ ⋆ ϕ) os
 oz      ⋆ oz = oz
 
-Δ₊ : Category ℓ 0ℓ 0ℓ
+Δ₊ : Category ℓ ℓ 0ℓ
 Δ₊ = record
   { Obj = Bwd 𝐾
   ; _⇒_ = _⊑_
@@ -72,11 +73,20 @@ oz      ⋆ oz = oz
   ; ∘-resp-≈ = λ _ _ → tt
   }
 
+weaken : (kz : Bwd 𝐾) → Endofunctor Δ₊
+weaken kz = record
+  { F₀ = _⧺ kz
+  ; F₁ = _⧺⊑ oi
+  ; identity = tt
+  ; homomorphism = tt
+  ; F-resp-≈ = λ _ → tt
+  }
+
 thinScoped : {T : Functor Δ₊ (Sets ℓ₁)} → iz ⊑ jz → T .F₀ iz → T .F₀ jz
 thinScoped {T = T} θ = T .F₁ θ
 
-weakenScoped : {T : Functor Δ₊ (Sets ℓ₁)} → T .F₀ iz → T .F₀ (iz -, k)
-weakenScoped {T = T} = T .F₁ (oi o′)
+weakenScopedRight : {T : Functor Δ₊ (Sets ℓ₁)} → T .F₀ iz → T .F₀ (iz ⧺ kz)
+weakenScopedRight {T = T} = T .F₁ (oi ⧺⊑ oe)
 
 module _ where
 
@@ -126,16 +136,19 @@ module _ where
     ϕ′ : jz′ ⊑ ijz′
     wss s₁ s₂ : Substructure
 
-  data Coverₒ : iz ⊑ ijz → jz ⊑ ijz → Set where
+  data Coverₒ : iz ⊑ ijz → jz ⊑ ijz → Set ℓ where
     _c′s : Coverₒ θ ϕ → Coverₒ (_o′ {k = k} θ) (ϕ os)
     czi : (p : ϕ ≡ oe) → Coverₒ oi ϕ
 
-  data Coverₗ : iz ⊑ ijz → jz ⊑ ijz → Set where
+--   asd : Rel₃ (Bwd 𝐾)
+--   asd = record { _∙_≣_ = λ iz jz ijz → Σ (iz ⊑ ijz) λ θ → Σ (jz ⊑ ijz) λ ϕ → Coverₒ θ ϕ }
+
+  data Coverₗ : iz ⊑ ijz → jz ⊑ ijz → Set ℓ where
     _c′s : Coverₗ θ ϕ → Coverₗ (_o′ {k = k} θ) (ϕ os)
     _cs′ : Coverₗ θ ϕ → Coverₗ (_os {k = k} θ) (ϕ o′)
     czz : Coverₗ oz oz
 
-  data Coverᵣ : iz ⊑ ijz → jz ⊑ ijz → Set where
+  data Coverᵣ : iz ⊑ ijz → jz ⊑ ijz → Set ℓ where
     _c′s : Coverᵣ θ ϕ → Coverᵣ (_o′ {k = k} θ) (ϕ os)
     _cs′ : Coverᵣ θ ϕ → Coverᵣ (_os {k = k} θ) (ϕ o′)
     _css : Coverᵣ θ ϕ → Coverᵣ (_os {k = k} θ) (ϕ os)
@@ -302,3 +315,13 @@ data Vaᵣ (k : 𝐾) : Scoped ℓ where
 
 vaᵣ : ([] -, k) ⊑ kz → Vaᵣ k ⇑ kz
 vaᵣ θ = only ↑ θ
+
+-- record HSub (T : Functor Δ₊ (Sets ℓ)) (src trg : Bwd 𝐾) (act : Bwd 𝐾) : Set ℓ where
+--   constructor _⊑_[_]:=_
+--   field
+--     { pass } : Bwd 𝐾
+--     { passive } : pass ⊑ src
+--     { active } : act ⊑ src
+--     passTrg : pass ⊑ trg
+--     parti : Coverₗ passive active
+--     images : T .F₀ ⇑ trg -- FIXME use active scope

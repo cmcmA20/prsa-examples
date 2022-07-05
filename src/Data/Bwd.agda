@@ -33,6 +33,11 @@ infix 4 _∈_
 _∈_ : A → Bwd A → Set _
 x ∈ xs = Any (_≡ x) xs
 
+-- contravariant functor from Δ₊ to Sets?
+-- data All {A : Set ℓ} (P : Pred A ℓ₁) : Pred (Bwd A) ℓ₁ where
+--   [] : ∀ {xs} → All P xs
+--   _::_ : ∀ {x xs} → All P xs → P x → All P (xs -, x)
+
 module Category where
   map : (A → B) → Bwd A → Bwd B
   map f [] = []
