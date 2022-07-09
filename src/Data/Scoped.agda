@@ -11,7 +11,7 @@ open import Categories.Category.Instance.Sets using (Sets)
 open import Categories.Functor using (Endofunctor; Functor)
 open import Data.Bwd using (Bwd; []; _-,_; _⧺_)
 open import Data.Product using (Σ; _×_; _,_)
-open import Data.Substructure using (Ordered; Linear; Substructure; Relevant; SubstructureCat; Unrestricted)
+open import Data.Substructure using (Ordered; Linear; Substructure; Relevant; SubstructureCat; Unrestricted; _≤_)
 open import Data.Unit.Polymorphic using (⊤; tt)
 open import Function using (_|>_)
 open Functor using (F₀; F₁)
@@ -197,6 +197,12 @@ module _ where
   cover-weaken {s₁ = Relevant} {s₂ = Unrestricted} _ = tt
   cover-weaken {s₁ = Unrestricted} {s₂ = Unrestricted} _ = tt
 
+  _⧺cₗ_ : {p₁ : s₁ ≤ Linear} → {p₂ : s₂ ≤ Linear} → Coverₛ θ ϕ s₁ → Coverₛ θ′ ϕ′ s₂ → Coverₗ (θ ⧺⊑ θ′) (ϕ ⧺⊑ ϕ′)
+  _⧺cₗ_ {p₁ = p₁} {p₂ = p₂} c₁ c₂ with cover-weaken {s₂ = Linear} {f = p₁} c₁ | cover-weaken {s₂ = Linear} {f = p₂} c₂
+  ... | c₁ | c₂ c′s = (c₁ ⧺cₗ c₂) c′s
+  ... | c₁ | c₂ cs′ = (c₁ ⧺cₗ c₂) cs′
+  ... | c₁ | czz = c₁
+
 -- CoverFunctor : (θ : iz ⊑ ijz) → (ϕ : jz ⊑ ijz) → Functor SubstructureCat (Sets ℓ)
 -- CoverFunctor θ ϕ = record
 --   { F₀ = Coverₛ θ ϕ
@@ -262,7 +268,7 @@ _⊣_ : ∀ {iz kz} jz → (ψ : iz ⊑ (kz ⧺ jz)) → Σ _ λ kz′ → Σ _ 
 (jz -, _) ⊣ (ψ os) with jz ⊣ ψ
 ... | ! ! (θ , ϕ , refl , refl) = ! ! (θ , ϕ os , refl , refl)
 
-open import Data.Sliced Δ₊ using (_⇑_; _↑_; thin⇑) renaming (CPred to Scoped) public
+open import Data.Sliced Δ₊ using (_⇑_; _↑_; map⇑; thin⇑) renaming (CPred to Scoped) public
 open _⇑_ public
 
 data Oneₛ : Scoped ℓ where
