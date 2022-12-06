@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --no-sized-types --no-guardedness --no-subtyping #-}
+{-# OPTIONS --safe #-}
 module Data.Bwd where
 
 open import Axiom.Extensionality.Propositional using (Extensionality)

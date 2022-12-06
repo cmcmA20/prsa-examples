@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --no-sized-types --no-guardedness --no-subtyping #-}
+{-# OPTIONS --safe #-}
 open import Level using (Level; _⊔_; 0ℓ)
 
 module Data.Scoped

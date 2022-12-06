@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --no-sized-types --no-guardedness --no-subtyping #-}
+{-# OPTIONS --safe #-}
 open import Categories.Category using (Category; _[_,_])
 
 module Data.Sliced

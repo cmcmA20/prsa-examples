@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --no-sized-types --no-guardedness --no-subtyping #-}
+{-# OPTIONS --safe #-}
 module Data.Substructure where
 
 open import Categories.Category using (Category)

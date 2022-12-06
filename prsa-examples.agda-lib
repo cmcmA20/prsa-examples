@@ -2,7 +2,7 @@ name: prsa-examples
 depend:
   standard-library-2.0
   agda-categories
-  agdarsec
-  ternary-relations
+--  agdarsec
+--  ternary-relations
 include: src/
-flags: --sized-types
+-- flags: --sized-types
