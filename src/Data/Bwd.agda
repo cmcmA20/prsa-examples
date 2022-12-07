@@ -20,10 +20,10 @@ data Bwd (A : Set ℓ) : Set ℓ where
 private variable
   A B C : Set ℓ
 
-infixl 6 _⧺_
-_⧺_ : Bwd A → Bwd A → Bwd A
-xs ⧺ [] = xs
-xs ⧺ (ys -, y) = (xs ⧺ ys) -, y
+infixl 6 _++_
+_++_ : Bwd A → Bwd A → Bwd A
+xs ++ [] = xs
+xs ++ (ys -, y) = (xs ++ ys) -, y
 
 data Any {A : Set ℓ} (P : Pred A ℓ₁) : Pred (Bwd A) ℓ₁ where
   here  : ∀ {x xs} (px  : P x) → Any P (xs -, x)
