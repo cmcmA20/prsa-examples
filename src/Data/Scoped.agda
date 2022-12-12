@@ -43,6 +43,11 @@ oi : kz ⊑ kz
 oi {[]     } = oz
 oi {kz -, _} = oi os
 
+_never-drops : iz ⊑ jz → Bool
+_ o′ never-drops = false
+θ os never-drops = θ never-drops
+oz   never-drops = true
+
 oe : [] ⊑ kz
 oe {[]     } = oz
 oe {kz -, k} = oe o′
@@ -170,6 +175,16 @@ _∐_ : (θ : iz ⊑ kz) (ϕ : jz ⊑ kz) →
 ... | ! ! ! ! (tl , c , tr) = ! ! ! ! (tl tsss , c css , tr tsss)
 oz ∐ oz = ! ! ! ! (tzzz , czz , tzzz)
 
+_∏_ : (θ : iz ⊑ kz) (ϕ : jz ⊑ kz) → Σ _ λ kz′ → Σ (kz′ ⊑ iz) λ θ′ → Σ (kz′ ⊑ jz) λ ϕ′ → Σ (kz′ ⊑ kz) λ ψ → Tri θ′ θ ψ × Tri ϕ′ ϕ ψ
+(θ o′) ∏ (ϕ o′) = let ! ! ! ! (tl , tr) = θ ∏ ϕ in ! ! ! ! (tl t-″ , tr t-″)
+(θ o′) ∏ (ϕ os) with θ ∏ ϕ
+... | ! ! ! ! (tl , tr) = ! ! ! ! (tl t-″ , tr t′s′)
+(θ os) ∏ (ϕ o′) with θ ∏ ϕ
+... | ! ! ! ! (tl , tr) = ! ! ! ! (tl t′s′ , tr t-″)
+(θ os) ∏ (ϕ os) with θ ∏ ϕ
+... | ! ! ! ! (tl , tr) = ! ! ! ! (tl tsss , tr tsss)
+oz ∏ oz = ! ! ! ! (tzzz , tzzz)
+
 module _ where
   private variable
     θ′ : iz′ ⊑ kz′
@@ -243,6 +258,7 @@ record _×ᵣ_ (S T : Scoped ℓ) (ijz : Bwd 𝐾) : Set ℓ where
     outr : T ⇑ ijz
     cover : Coverᵣ (outl .thinning) (outr .thinning)
 
+infixl 4 _,ᵣ_
 _,ᵣ_ : {S T : Scoped _} → S ⇑ kz → T ⇑ kz → (S ×ᵣ T) ⇑ kz
 (s ↑ θ) ,ᵣ (t ↑ ϕ) = let _ , ψ , θ′ , ϕ′ , _ , c , _ = θ ∐ ϕ in pair (s ↑ θ′) (t ↑ ϕ′) c ↑ ψ
 
